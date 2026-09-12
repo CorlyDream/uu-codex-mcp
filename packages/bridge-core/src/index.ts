@@ -2,3 +2,8 @@ export * from './config.js';
 export * from './errors.js';
 export * from './logger.js';
 export * from './types.js';
+export * from './cli/adapter.js';
+export * from './cli/capabilities.js';
+export * from './cli/devices.js';
+export * from './cli/discovery.js';
+export * from './cli/runner.js';
