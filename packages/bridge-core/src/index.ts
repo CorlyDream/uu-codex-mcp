@@ -12,3 +12,6 @@ export * from './protocol/powershell.js';
 export * from './protocol/result-pages.js';
 export * from './session/owned-terminals.js';
 export * from './session/serial-executor.js';
+export * from './helper/protocol.js';
+export * from './helper/client.js';
+export * from './helper/process.js';
