@@ -70,3 +70,16 @@ struct HelperResponse: Codable, Equatable {
         HelperResponse(id: id, ok: false, result: nil, error: HelperErrorPayload(code: code, message: message, retryable: retryable))
     }
 }
+
+/// Internal typed failure mapped to the stable helper JSON error payload.
+struct HelperActionError: Error, Equatable {
+    let code: String
+    let message: String
+    let retryable: Bool
+
+    init(_ code: String, _ message: String, retryable: Bool = false) {
+        self.code = code
+        self.message = message
+        self.retryable = retryable
+    }
+}

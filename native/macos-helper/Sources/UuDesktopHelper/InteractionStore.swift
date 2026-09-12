@@ -4,6 +4,7 @@ import Foundation
 struct InteractionRecord {
     let id: UUID
     var windowHandleId: UUID?
+    var appBundlePath: String?
     var clipboardSnapshotIds: Set<UUID>
 }
 
@@ -13,11 +14,17 @@ final class InteractionStore {
     private let lock = NSLock()
 
     /// Create a fresh interaction identifier controlled by this helper process.
-    func create(windowHandleId: UUID? = nil) -> UUID {
+    func create(windowHandleId: UUID? = nil, appBundlePath: String? = nil) -> UUID {
         lock.lock(); defer { lock.unlock() }
         let id = UUID()
-        records[id] = InteractionRecord(id: id, windowHandleId: windowHandleId, clipboardSnapshotIds: [])
+        records[id] = InteractionRecord(id: id, windowHandleId: windowHandleId, appBundlePath: appBundlePath, clipboardSnapshotIds: [])
         return id
+    }
+
+    /// Read a copy of a live interaction without exposing the mutable registry itself.
+    func record(_ id: UUID) -> InteractionRecord? {
+        lock.lock(); defer { lock.unlock() }
+        return records[id]
     }
 
     /// Remove an interaction and forget all native ownership attached to it.
@@ -29,7 +36,6 @@ final class InteractionStore {
 
     /// Return whether an identifier was created by this process and is still live.
     func contains(_ id: UUID) -> Bool {
-        lock.lock(); defer { lock.unlock() }
-        return records[id] != nil
+        record(id) != nil
     }
 }
