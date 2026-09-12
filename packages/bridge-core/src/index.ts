@@ -10,3 +10,5 @@ export * from './cli/runner.js';
 export * from './protocol/markers.js';
 export * from './protocol/powershell.js';
 export * from './protocol/result-pages.js';
+export * from './session/owned-terminals.js';
+export * from './session/serial-executor.js';
