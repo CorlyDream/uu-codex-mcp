@@ -63,10 +63,12 @@ export class DesktopHelperClient {
   }
 
   /** Verify the helper protocol is alive and return its advertised health state. */
-  async health(): Promise<{ status: string }> {
+  async health(): Promise<{ status: string; accessibilityTrusted: boolean }> {
     const result = await this.call('health');
-    if (typeof result.status !== 'string') throw new UuError('UU_HELPER_PROTOCOL_ERROR', 'Desktop Helper health 响应无效。', true);
-    return { status: result.status };
+    if (typeof result.status !== 'string' || typeof result.accessibility_trusted !== 'boolean') {
+      throw new UuError('UU_HELPER_PROTOCOL_ERROR', 'Desktop Helper health 响应无效。', true);
+    }
+    return { status: result.status, accessibilityTrusted: result.accessibility_trusted };
   }
 
   /** Acquire an opaque interaction for one exact UU terminal window. */

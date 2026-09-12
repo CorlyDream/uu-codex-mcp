@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { chmod, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { access, chmod, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -76,7 +76,11 @@ describe('stdio entrypoint', () => {
     await mkdir(dirname(cli), { recursive: true });
     await writeFile(cli, '#!/bin/sh\nexit 0\n');
     await chmod(cli, 0o755);
-    const main = join(dirname(fileURLToPath(import.meta.url)), '../src/main.js');
+    const testDir = dirname(fileURLToPath(import.meta.url));
+    const sourceRunMain = join(testDir, '..', 'dist', 'main.js');
+    const compiledRunMain = join(testDir, '..', 'main.js');
+    let main = sourceRunMain;
+    try { await access(main); } catch { main = compiledRunMain; }
     const child = spawn(process.execPath, [main], { env: { ...process.env, UU_CLI_PATH: cli }, stdio: ['pipe', 'pipe', 'pipe'] });
     let stdout = ''; let stderr = '';
     child.stdout?.setEncoding('utf8'); child.stderr?.setEncoding('utf8');

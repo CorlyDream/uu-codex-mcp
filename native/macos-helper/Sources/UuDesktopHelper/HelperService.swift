@@ -24,7 +24,7 @@ final class HelperService {
         do {
             switch request.action {
             case "health":
-                return .success(id: request.id, result: ["status": .string("ok")])
+                return .success(id: request.id, result: ["status": .string("ok"), "accessibility_trusted": .bool(accessibility.isTrusted())])
             case "begin_interaction":
                 return try beginInteraction(request)
             case "clipboard_snapshot":
