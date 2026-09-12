@@ -4,3 +4,8 @@ dist/
 .superpowers/
 *.sock
 native/macos-helper/.build/
+.env
+.env.*
+!.env.example
+*.log
+pnpm-debug.log*
