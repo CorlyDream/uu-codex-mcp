@@ -7,3 +7,6 @@ export * from './cli/capabilities.js';
 export * from './cli/devices.js';
 export * from './cli/discovery.js';
 export * from './cli/runner.js';
+export * from './protocol/markers.js';
+export * from './protocol/powershell.js';
+export * from './protocol/result-pages.js';
