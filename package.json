@@ -12,11 +12,13 @@
     "typecheck": "pnpm -r typecheck",
     "helper:build": "swift build -c release --package-path native/macos-helper",
     "helper:test": "swift test --package-path native/macos-helper",
-    "helper:install": "node scripts/install-helper.mjs"
+    "helper:install": "node scripts/install-helper.mjs",
+    "test:uu": "tsx tests/integration/uu-smoke.ts"
   },
   "devDependencies": {
     "typescript": "^5.9.0",
     "vitest": "^3.2.0",
-    "@types/node": "^22.0.0"
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.0"
   }
 }
