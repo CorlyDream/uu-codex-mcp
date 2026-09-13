@@ -25,6 +25,13 @@ describe('remote result protocol', () => {
     expect(script).toContain('FromBase64String');
   });
 
+  it('detects PowerShell errors without relying on $? after array capture', () => {
+    const script = buildExecutionCommand("Write-Error 'boom'", '0123456789abcdef01234567');
+    expect(script).toContain('[System.Management.Automation.ErrorRecord]');
+    expect(script).toContain('$__uuHadError=');
+    expect(script).not.toContain('$__uuPowerShellOk=$?');
+  });
+
   it('parses the last meta marker from noisy terminal text', () => {
     const markers = markersFor('0123456789abcdef01234567');
     const text = `${markers.meta}:11\nold\nnoise\n${markers.meta}:932\nPS C:\\>`;
