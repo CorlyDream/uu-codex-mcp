@@ -13,26 +13,31 @@ import { createServer, type BridgeApi } from './server.js';
 
 const logger = new StderrLogger();
 
-/** Run one stdio MCP connection while deferring Accessibility/helper startup until the first execution request. */
+/** Run one stdio MCP connection while deferring Accessibility/helper startup until a GUI execution request. */
 async function main(): Promise<void> {
   const installation = await discoverUuInstallation();
   const cli = new UuCliAdapter(installation.cliPath);
   const helper = new DesktopHelperClient();
   const transport = new GuiTransport({ cli, helper, appBundlePath: installation.appBundlePath, logger });
   const helperOwner: { child: ChildProcess | null } = { child: null };
-  let helperReady: Promise<void> | undefined;
+  let helperEnsureInFlight: Promise<void> | null = null;
 
+  /** Re-check helper health for every execution, coalescing only concurrent startup attempts. */
   const ensureHelperReady = (): Promise<void> => {
-    if (!helperReady) {
-      helperReady = (async () => {
+    if (!helperEnsureInFlight) {
+      helperEnsureInFlight = (async () => {
         const child = await ensureDesktopHelper(helper, { logger });
-        if (child) helperOwner.child = child;
-      })().catch((error) => {
-        helperReady = undefined;
-        throw error;
+        if (child) {
+          helperOwner.child = child;
+          child.once('exit', () => {
+            if (helperOwner.child === child) helperOwner.child = null;
+          });
+        }
+      })().finally(() => {
+        helperEnsureInFlight = null;
       });
     }
-    return helperReady;
+    return helperEnsureInFlight;
   };
 
   const bridge: BridgeApi = {
@@ -44,11 +49,34 @@ async function main(): Promise<void> {
     closeOwnedTerminal: (deviceId) => transport.closeOwnedTerminal(deviceId),
   };
 
-  try {
-    await serveStdio(() => createServer(bridge));
-  } finally {
-    helperOwner.child?.kill();
-  }
+  const handle = serveStdio(() => createServer(bridge));
+  let shuttingDown = false;
+
+  /** Kill only the Desktop Helper process started and owned by this MCP process. */
+  const stopOwnedHelper = (): void => {
+    const child = helperOwner.child;
+    helperOwner.child = null;
+    if (child && !child.killed) child.kill();
+  };
+
+  /** Close stdio transport and local helper on explicit process termination signals. */
+  const shutdown = async (exitCode: number): Promise<void> => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    stopOwnedHelper();
+    try {
+      await handle.close();
+    } catch {
+      logger.warn('mcp.close_failed', {});
+    }
+    process.exitCode = exitCode;
+  };
+
+  // Host disconnect is the normal stdio lifecycle; close both the MCP handle and any helper child we own.
+  process.stdin.once('end', () => { void shutdown(0); });
+  process.once('exit', stopOwnedHelper);
+  process.once('SIGINT', () => { void shutdown(130); });
+  process.once('SIGTERM', () => { void shutdown(143); });
 }
 
 try {
