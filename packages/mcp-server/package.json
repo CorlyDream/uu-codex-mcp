@@ -1,0 +1,27 @@
+{
+  "name": "@uu-codex/mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "uu-codex-mcp": "./dist/main.js"
+  },
+  "scripts": {
+    "build": "pnpm --filter @uu-codex/bridge-core build && tsc -p tsconfig.build.json",
+    "typecheck": "pnpm --filter @uu-codex/bridge-core build && tsc -p tsconfig.json --noEmit",
+    "test": "pnpm run build && vitest run",
+    "doctor": "node dist/doctor.js",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.0.0",
+    "@uu-codex/bridge-core": "workspace:*",
+    "zod": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  },
+  "description": "Local MCP bridge for controlling authorized Windows PowerShell sessions through NetEase UU Remote from macOS."
+}
