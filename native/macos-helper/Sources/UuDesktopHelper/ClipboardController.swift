@@ -48,14 +48,16 @@ final class ClipboardController {
         }
     }
 
-    /// Restore a locally-created snapshot exactly once and then forget the sensitive in-memory copy.
+    /// Restore a locally-created snapshot and forget it only after the pasteboard write succeeds.
+    /// A failed restore keeps the sensitive snapshot in memory so the caller can safely retry.
     func restore(_ snapshotId: UUID) throws {
         lock.lock()
-        let items = snapshots.removeValue(forKey: snapshotId)
+        let items = snapshots[snapshotId]
         lock.unlock()
         guard let items else { throw HelperActionError("UU_CLIPBOARD_FAILED", "剪贴板 snapshot 不存在。") }
         do {
             try provider.replaceItems(items)
+            lock.lock(); snapshots.removeValue(forKey: snapshotId); lock.unlock()
         } catch {
             throw HelperActionError("UU_CLIPBOARD_FAILED", "无法恢复剪贴板。", retryable: true)
         }
