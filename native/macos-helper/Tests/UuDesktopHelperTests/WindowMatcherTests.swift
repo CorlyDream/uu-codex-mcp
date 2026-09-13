@@ -28,4 +28,16 @@ final class WindowMatcherTests: XCTestCase {
         let windows = [WindowSnapshot(handleId: UUID(), title: "客户B - 终端", role: "AXWindow", focused: false)]
         XCTAssertThrowsError(try WindowMatcher.match(windows: windows, deviceName: "客户A"))
     }
+
+    func testDeviceNameDoesNotMatchAlphanumericPrefixCollision() {
+        let windows = [WindowSnapshot(handleId: UUID(), title: "PC2 - Terminal", role: "AXWindow", focused: false)]
+        XCTAssertThrowsError(try WindowMatcher.match(windows: windows, deviceName: "PC")) { error in
+            XCTAssertEqual((error as? HelperActionError)?.code, "UU_TERM_WINDOW_NOT_FOUND")
+        }
+    }
+
+    func testDeviceNameCanAppearBetweenSeparators() throws {
+        let expected = WindowSnapshot(handleId: UUID(), title: "UU - PC - Terminal", role: "AXWindow", focused: false)
+        XCTAssertEqual(try WindowMatcher.match(windows: [expected], deviceName: "PC"), expected)
+    }
 }
